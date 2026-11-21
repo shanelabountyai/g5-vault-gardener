@@ -1,0 +1,67 @@
+[project]
+name = "g5-vault-gardener"
+version = "0.1.0"
+description = "Vault Gardener, code version (G5·C): a Watcher, Classifier and Linker tend a copy of an Obsidian-style vault every 15 minutes, under a supervisor with a daily budget, an error-burst limit and a kill switch, attached to the shared capability layer (G0)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = [
+    # The shared layer, pinned to G0 main (merge of g0-shared-layer PR #1), exactly as G3·C does (D-7).
+    "g0-shared-layer @ git+https://github.com/shanelabountyai/g0-shared-layer@6f5e605f8b485afa95f1cbef73911057b8b4dec5",
+    "claude-agent-sdk>=0.2.187,<0.3",
+    "pydantic>=2.11,<3",
+    "pyyaml>=6.0",
+    "opentelemetry-api>=1.45,<2",
+    "opentelemetry-sdk>=1.45,<2",
+    "anyio>=4",
+]
+
+[project.scripts]
+gardener = "vault_gardener.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "types-PyYAML>=6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vault_gardener"]
+
+[tool.hatch.metadata]
+allow-direct-references = true  # the G0 git pin above
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 160
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"fixtures/make_fixtures.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["claude_agent_sdk.*"]
+follow_imports = "skip"
+
+[tool.uv]
+required-version = ">=0.5"
