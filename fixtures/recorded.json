@@ -1,0 +1,985 @@
+{
+  "_about": "HAND-WRITTEN responses in each agent's output shape (D-9), keyed <agent>:<path>. Not a recording of a live model. Designed mistakes are listed in fixtures/make_fixtures.py (D-24).",
+  "responses": {
+    "classifier:logs/sourdough-starter-log.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/sourdough-starter-log.md": {
+      "related": [
+        "sourdough-hydration-table",
+        "weeknight-bean-stew",
+        "bread-oven-schedule"
+      ]
+    },
+    "classifier:reference/sourdough-hydration-table.md": {
+      "tags": [
+        "topic/cooking",
+        "topic/baking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/sourdough-hydration-table.md": {
+      "related": [
+        "weeknight-bean-stew",
+        "bread-oven-schedule",
+        "fermented-hot-sauce"
+      ]
+    },
+    "classifier:reference/weeknight-bean-stew.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/weeknight-bean-stew.md": {
+      "related": [
+        "bread-oven-schedule",
+        "fermented-hot-sauce",
+        "knife-sharpening-angles"
+      ]
+    },
+    "classifier:projects/bread-oven-schedule.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/bread-oven-schedule.md": {
+      "related": [
+        "fermented-hot-sauce",
+        "knife-sharpening-angles",
+        "pantry-restock-list"
+      ]
+    },
+    "classifier:ideas/fermented-hot-sauce.md": {
+      "tags": [
+        "topic/cooking",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/fermented-hot-sauce.md": {
+      "related": [
+        "knife-sharpening-angles",
+        "pantry-restock-list",
+        "sourdough-starter-log"
+      ]
+    },
+    "classifier:reference/knife-sharpening-angles.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/knife-sharpening-angles.md": {
+      "related": [
+        "pantry-restock-list",
+        "sourdough-starter-log",
+        "sourdough-hydration-table"
+      ]
+    },
+    "classifier:projects/pantry-restock-list.md": {
+      "tags": [
+        "topic/cooking",
+        "status/done"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/pantry-restock-list.md": {
+      "related": [
+        "sourdough-starter-log",
+        "sourdough-hydration-table",
+        "weeknight-bean-stew"
+      ]
+    },
+    "classifier:projects/tomato-bed-rotation.md": {
+      "tags": [
+        "topic/gardening",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/tomato-bed-rotation.md": {
+      "related": [
+        "compost-temperature-log",
+        "seed-starting-calendar",
+        "drip-irrigation-plan"
+      ]
+    },
+    "classifier:logs/compost-temperature-log.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/compost-temperature-log.md": {
+      "related": [
+        "seed-starting-calendar",
+        "drip-irrigation-plan",
+        "pollinator-strip-idea"
+      ]
+    },
+    "classifier:reference/seed-starting-calendar.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/seed-starting-calendar.md": {
+      "related": [
+        "drip-irrigation-plan",
+        "pollinator-strip-idea",
+        "frost-dates-reference"
+      ]
+    },
+    "classifier:projects/drip-irrigation-plan.md": {
+      "tags": [
+        "topic/gardening",
+        "status/someday"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/drip-irrigation-plan.md": {
+      "related": [
+        "pollinator-strip-idea",
+        "frost-dates-reference",
+        "garlic-planting-log"
+      ]
+    },
+    "classifier:ideas/pollinator-strip-idea.md": {
+      "tags": [
+        "topic/gardening",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/pollinator-strip-idea.md": {
+      "related": [
+        "frost-dates-reference",
+        "garlic-planting-log",
+        "tomato-bed-rotation"
+      ]
+    },
+    "classifier:reference/frost-dates-reference.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/frost-dates-reference.md": {
+      "related": [
+        "garlic-planting-log",
+        "tomato-bed-rotation",
+        "compost-temperature-log"
+      ]
+    },
+    "classifier:logs/garlic-planting-log.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/garlic-planting-log.md": {
+      "related": [
+        "tomato-bed-rotation",
+        "compost-temperature-log",
+        "seed-starting-calendar"
+      ]
+    },
+    "classifier:projects/cli-todo-tool.md": {
+      "tags": [
+        "topic/programming",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/cli-todo-tool.md": {
+      "related": [
+        "python-packaging-notes",
+        "sqlite-wal-notes",
+        "regex-cheatsheet"
+      ]
+    },
+    "classifier:reference/python-packaging-notes.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/python-packaging-notes.md": {
+      "related": [
+        "sqlite-wal-notes",
+        "regex-cheatsheet",
+        "test-fixture-patterns"
+      ]
+    },
+    "classifier:reference/sqlite-wal-notes.md": {
+      "tags": [
+        "topic/programming",
+        "topic/networking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/sqlite-wal-notes.md": {
+      "related": [
+        "regex-cheatsheet",
+        "test-fixture-patterns",
+        "static-site-idea"
+      ]
+    },
+    "classifier:reference/regex-cheatsheet.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/regex-cheatsheet.md": {
+      "related": [
+        "test-fixture-patterns",
+        "static-site-idea",
+        "caulk-types-reference"
+      ]
+    },
+    "classifier:reference/test-fixture-patterns.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/test-fixture-patterns.md": {
+      "related": [
+        "static-site-idea",
+        "refactor-log-cli",
+        "cli-todo-tool"
+      ]
+    },
+    "classifier:ideas/static-site-idea.md": {
+      "tags": [
+        "topic/programming",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/static-site-idea.md": {
+      "related": [
+        "refactor-log-cli",
+        "cli-todo-tool",
+        "python-packaging-notes"
+      ]
+    },
+    "classifier:logs/refactor-log-cli.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/refactor-log-cli.md": {
+      "related": [
+        "cli-todo-tool",
+        "python-packaging-notes",
+        "sqlite-wal-notes"
+      ]
+    },
+    "classifier:reference/telescope-collimation.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/telescope-collimation.md": {
+      "related": [
+        "messier-observing-list",
+        "moon-phase-log",
+        "dark-sky-sites"
+      ]
+    },
+    "classifier:projects/messier-observing-list.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/messier-observing-list.md": {
+      "related": [
+        "moon-phase-log",
+        "dark-sky-sites",
+        "astrophotography-idea"
+      ]
+    },
+    "classifier:logs/moon-phase-log.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:logs/moon-phase-log.md": {
+      "related": [
+        "dark-sky-sites",
+        "astrophotography-idea",
+        "eyepiece-comparison"
+      ]
+    },
+    "classifier:reference/dark-sky-sites.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/dark-sky-sites.md": {
+      "related": [
+        "astrophotography-idea",
+        "eyepiece-comparison",
+        "telescope-collimation"
+      ]
+    },
+    "classifier:ideas/astrophotography-idea.md": {
+      "tags": [
+        "topic/astronomy",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/astrophotography-idea.md": {
+      "related": [
+        "eyepiece-comparison",
+        "telescope-collimation",
+        "messier-observing-list"
+      ]
+    },
+    "classifier:reference/eyepiece-comparison.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/eyepiece-comparison.md": {
+      "related": [
+        "telescope-collimation",
+        "messier-observing-list",
+        "moon-phase-log"
+      ]
+    },
+    "classifier:projects/bathroom-fan-replacement.md": {
+      "tags": [
+        "topic/home-repair",
+        "status/done"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/bathroom-fan-replacement.md": {
+      "related": [
+        "door-hinge-squeak",
+        "caulk-types-reference",
+        "gutter-cleaning-schedule"
+      ]
+    },
+    "classifier:logs/door-hinge-squeak.md": {
+      "tags": [
+        "topic/home-repair"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/door-hinge-squeak.md": {
+      "related": [
+        "caulk-types-reference",
+        "gutter-cleaning-schedule",
+        "shelf-anchor-guide"
+      ]
+    },
+    "classifier:reference/caulk-types-reference.md": {
+      "tags": [
+        "topic/home-repair"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/caulk-types-reference.md": {
+      "related": [
+        "gutter-cleaning-schedule",
+        "shelf-anchor-guide",
+        "workbench-build-idea"
+      ]
+    },
+    "classifier:projects/gutter-cleaning-schedule.md": {
+      "tags": [
+        "topic/home-repair",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/gutter-cleaning-schedule.md": {
+      "related": [
+        "shelf-anchor-guide",
+        "workbench-build-idea",
+        "bathroom-fan-replacement"
+      ]
+    },
+    "classifier:reference/shelf-anchor-guide.md": {
+      "tags": [
+        "topic/home-repair"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/shelf-anchor-guide.md": {
+      "related": [
+        "workbench-build-idea",
+        "bathroom-fan-replacement",
+        "door-hinge-squeak"
+      ]
+    },
+    "classifier:ideas/workbench-build-idea.md": {
+      "tags": [
+        "topic/home-repair",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/workbench-build-idea.md": {
+      "related": [
+        "bathroom-fan-replacement",
+        "door-hinge-squeak",
+        "caulk-types-reference"
+      ]
+    },
+    "classifier:projects/reading-list-autumn.md": {
+      "tags": [
+        "topic/reading",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/reading-list-autumn.md": {
+      "related": [
+        "notes-the-patient-orchard",
+        "notes-maps-of-small-rivers",
+        "highlight-review-method"
+      ]
+    },
+    "classifier:reference/notes-the-patient-orchard.md": {
+      "tags": [
+        "topic/reading"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/notes-the-patient-orchard.md": {
+      "related": [
+        "notes-maps-of-small-rivers",
+        "highlight-review-method",
+        "book-club-question-bank"
+      ]
+    },
+    "classifier:reference/notes-maps-of-small-rivers.md": {
+      "tags": [
+        "topic/reading"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/notes-maps-of-small-rivers.md": {
+      "related": [
+        "highlight-review-method",
+        "book-club-question-bank",
+        "reading-log-october"
+      ]
+    },
+    "classifier:reference/highlight-review-method.md": {
+      "tags": [
+        "topic/reading"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/highlight-review-method.md": {
+      "related": [
+        "book-club-question-bank",
+        "reading-log-october",
+        "reading-list-autumn"
+      ]
+    },
+    "classifier:ideas/book-club-question-bank.md": {
+      "tags": [
+        "topic/reading",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/book-club-question-bank.md": {
+      "related": [
+        "reading-log-october",
+        "reading-list-autumn",
+        "notes-the-patient-orchard"
+      ]
+    },
+    "classifier:logs/reading-log-october.md": {
+      "tags": [
+        "topic/reading"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/reading-log-october.md": {
+      "related": [
+        "reading-list-autumn",
+        "notes-the-patient-orchard",
+        "notes-maps-of-small-rivers"
+      ]
+    },
+    "classifier:projects/10k-training-plan.md": {
+      "tags": [
+        "topic/fitness",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/10k-training-plan.md": {
+      "related": [
+        "stretching-routine",
+        "run-log-week-41",
+        "shoe-rotation"
+      ]
+    },
+    "classifier:reference/stretching-routine.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/stretching-routine.md": {
+      "related": [
+        "run-log-week-41",
+        "shoe-rotation",
+        "hill-repeats-idea"
+      ]
+    },
+    "classifier:logs/run-log-week-41.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/run-log-week-41.md": {
+      "related": [
+        "shoe-rotation",
+        "hill-repeats-idea",
+        "strength-basics"
+      ]
+    },
+    "classifier:reference/shoe-rotation.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/shoe-rotation.md": {
+      "related": [
+        "hill-repeats-idea",
+        "strength-basics",
+        "10k-training-plan"
+      ]
+    },
+    "classifier:ideas/hill-repeats-idea.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/hill-repeats-idea.md": {
+      "related": [
+        "strength-basics",
+        "10k-training-plan",
+        "stretching-routine"
+      ]
+    },
+    "classifier:reference/strength-basics.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/strength-basics.md": {
+      "related": [
+        "10k-training-plan",
+        "stretching-routine",
+        "run-log-week-41"
+      ]
+    },
+    "classifier:reference/bike-chain-maintenance.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/bike-chain-maintenance.md": {
+      "related": [
+        "commute-route-options",
+        "tubeless-conversion",
+        "ride-log-october"
+      ]
+    },
+    "classifier:reference/commute-route-options.md": {
+      "tags": [
+        "topic/cycling",
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/commute-route-options.md": {
+      "related": [
+        "tubeless-conversion",
+        "ride-log-october",
+        "bikepacking-trip-idea"
+      ]
+    },
+    "classifier:projects/tubeless-conversion.md": {
+      "tags": [
+        "topic/cycling",
+        "status/done"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/tubeless-conversion.md": {
+      "related": [
+        "ride-log-october",
+        "bikepacking-trip-idea",
+        "brake-pad-wear-check"
+      ]
+    },
+    "classifier:logs/ride-log-october.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/ride-log-october.md": {
+      "related": [
+        "bikepacking-trip-idea",
+        "brake-pad-wear-check",
+        "run-log-week-41"
+      ]
+    },
+    "classifier:ideas/bikepacking-trip-idea.md": {
+      "tags": [
+        "topic/cycling",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/bikepacking-trip-idea.md": {
+      "related": [
+        "brake-pad-wear-check",
+        "bike-chain-maintenance",
+        "commute-route-options"
+      ]
+    },
+    "classifier:reference/brake-pad-wear-check.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/brake-pad-wear-check.md": {
+      "related": [
+        "bike-chain-maintenance",
+        "commute-route-options",
+        "tubeless-conversion"
+      ]
+    },
+    "classifier:reference/home-network-map.md": {
+      "tags": [
+        "topic/networking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/home-network-map.md": {
+      "related": [
+        "wifi-mesh-upgrade",
+        "router-firmware-log",
+        "dns-filtering-idea"
+      ]
+    },
+    "classifier:projects/wifi-mesh-upgrade.md": {
+      "tags": [
+        "topic/networking",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/wifi-mesh-upgrade.md": {
+      "related": [
+        "router-firmware-log",
+        "dns-filtering-idea",
+        "vlan-notes"
+      ]
+    },
+    "classifier:logs/router-firmware-log.md": {
+      "tags": [
+        "topic/networking"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:logs/router-firmware-log.md": {
+      "related": [
+        "dns-filtering-idea",
+        "vlan-notes",
+        "backup-nas-plan"
+      ]
+    },
+    "classifier:ideas/dns-filtering-idea.md": {
+      "tags": [
+        "topic/networking",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:ideas/dns-filtering-idea.md": {
+      "related": [
+        "vlan-notes",
+        "backup-nas-plan",
+        "home-network-map",
+        "pi-hole-setup"
+      ]
+    },
+    "classifier:reference/vlan-notes.md": {
+      "tags": [
+        "topic/networking"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:reference/vlan-notes.md": {
+      "related": [
+        "backup-nas-plan",
+        "home-network-map",
+        "wifi-mesh-upgrade"
+      ]
+    },
+    "classifier:projects/backup-nas-plan.md": {
+      "tags": [
+        "topic/networking",
+        "status/someday"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:projects/backup-nas-plan.md": {
+      "related": [
+        "home-network-map",
+        "wifi-mesh-upgrade",
+        "router-firmware-log"
+      ]
+    },
+    "classifier:inbox/quick-note-proofing-box.md": {
+      "tags": [
+        "topic/cooking",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:inbox/quick-note-proofing-box.md": {
+      "related": [
+        "sourdough-starter-log",
+        "sourdough-hydration-table",
+        "weeknight-bean-stew"
+      ]
+    },
+    "classifier:inbox/clipped-mulch-tips.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:inbox/clipped-mulch-tips.md": {
+      "related": [
+        "tomato-bed-rotation",
+        "compost-temperature-log",
+        "seed-starting-calendar"
+      ]
+    },
+    "classifier:inbox/star-party-checklist.md": {
+      "tags": [
+        "topic/astronomy",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:inbox/star-party-checklist.md": {
+      "related": [
+        "telescope-collimation",
+        "messier-observing-list",
+        "moon-phase-log"
+      ]
+    },
+    "classifier:inbox/todo-fix-leaky-faucet.md": {
+      "tags": [
+        "topic/home-repair",
+        "status/active"
+      ],
+      "type": "project",
+      "folder": "projects"
+    },
+    "linker:inbox/todo-fix-leaky-faucet.md": {
+      "related": [
+        "bathroom-fan-replacement",
+        "door-hinge-squeak",
+        "caulk-types-reference"
+      ]
+    },
+    "classifier:inbox/pacing-notes.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:inbox/pacing-notes.md": {
+      "related": [
+        "10k-training-plan",
+        "stretching-routine",
+        "run-log-week-41"
+      ]
+    },
+    "classifier:inbox/router-reboot-again.md": "Sorry, I can't tag this note right now.",
+    "classifier:inbox/pizza-dough-test.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:inbox/pizza-dough-test.md": {
+      "related": [
+        "sourdough-starter-log",
+        "sourdough-hydration-table",
+        "weeknight-bean-stew"
+      ]
+    },
+    "classifier:inbox/aphids-on-the-kale.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:inbox/aphids-on-the-kale.md": {
+      "related": [
+        "tomato-bed-rotation",
+        "compost-temperature-log",
+        "seed-starting-calendar"
+      ]
+    },
+    "classifier:inbox/typing-tip-protocols.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:inbox/typing-tip-protocols.md": {
+      "related": [
+        "cli-todo-tool",
+        "python-packaging-notes",
+        "sqlite-wal-notes"
+      ]
+    },
+    "classifier:inbox/meteor-shower-dates.md": {
+      "tags": [
+        "topic/astronomy"
+      ],
+      "type": "reference",
+      "folder": "reference"
+    },
+    "linker:inbox/meteor-shower-dates.md": {
+      "related": [
+        "telescope-collimation",
+        "messier-observing-list",
+        "moon-phase-log"
+      ]
+    },
+    "classifier:inbox/saddle-height-fix.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "log",
+      "folder": "logs"
+    },
+    "linker:inbox/saddle-height-fix.md": {
+      "related": [
+        "bike-chain-maintenance",
+        "commute-route-options",
+        "tubeless-conversion"
+      ]
+    },
+    "classifier:inbox/novel-recommendation.md": {
+      "tags": [
+        "topic/reading",
+        "status/someday"
+      ],
+      "type": "idea",
+      "folder": "ideas"
+    },
+    "linker:inbox/novel-recommendation.md": {
+      "related": [
+        "reading-list-autumn",
+        "notes-the-patient-orchard",
+        "notes-maps-of-small-rivers"
+      ]
+    }
+  }
+}

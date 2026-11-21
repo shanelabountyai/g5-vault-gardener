@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install (locked)
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Typecheck
+        run: uv run mypy
+      - name: Test
+        run: uv run pytest
+      - name: 96-tick simulation (recorded fixtures, simulated clock)
+        run: uv run gardener simulate --ticks 96 --state "$RUNNER_TEMP/sim" --report "$RUNNER_TEMP/daily-report.md"
+      - name: Quality report (recorded fixtures vs labeled sample)
+        run: uv run gardener quality --state "$RUNNER_TEMP/quality" --out "$RUNNER_TEMP/quality-report.md"

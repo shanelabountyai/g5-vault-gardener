@@ -1,0 +1,31 @@
+{
+  "_about": "Synthetic tag taxonomy for the fixture vault (D-6). Tags outside this list are never written.",
+  "tags": [
+    "topic/astronomy",
+    "topic/cooking",
+    "topic/cycling",
+    "topic/fitness",
+    "topic/gardening",
+    "topic/home-repair",
+    "topic/networking",
+    "topic/programming",
+    "topic/reading",
+    "status/active",
+    "status/someday",
+    "status/done"
+  ],
+  "types": [
+    "project",
+    "reference",
+    "idea",
+    "log",
+    "meeting"
+  ],
+  "type_folder": {
+    "project": "projects",
+    "reference": "reference",
+    "idea": "ideas",
+    "log": "logs",
+    "meeting": "meetings"
+  }
+}

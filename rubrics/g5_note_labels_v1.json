@@ -1,0 +1,17 @@
+{
+  "_about": "G5 rubric for one labeled note (D-8). Seeded into G0's rubric store through G0's own loader; scored by G0's evaluation capability (DeterministicJudge + decide()). The item is an object built by quality.py from comparing the vault after a run with fixtures/labels.json: {type_match: yes|no, tags_recall: full|partial|none, tags_precision: full|partial|none, links_precision: full|partial|none|no_links}.",
+  "rubrics": [
+    {
+      "id": "g5_note_labels_v1",
+      "title": "Vault note: type right, expected tags present, no wrong tags, no wrong links",
+      "source": "g5-vault-gardener docs/prd.md (evaluation hook: hand-labeled sample for tagging and linking quality)",
+      "pass_threshold": 0.75,
+      "criteria": [
+        {"id": "type_correct", "weight": 1, "required": true, "description": "The note's type equals the label.", "check": "field_in:type_match:yes"},
+        {"id": "tags_complete", "weight": 1, "required": false, "description": "Every labeled tag is on the note.", "check": "field_in:tags_recall:full"},
+        {"id": "tags_clean", "weight": 1, "required": true, "description": "Every tag on the note is a labeled tag.", "check": "field_in:tags_precision:full"},
+        {"id": "links_clean", "weight": 1, "required": false, "description": "Every link in the Related section is a labeled related note (a note with no links counts as clean).", "check": "field_in:links_precision:full,no_links"}
+      ]
+    }
+  ]
+}
