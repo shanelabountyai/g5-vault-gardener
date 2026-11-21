@@ -1,0 +1,301 @@
+{
+  "_about": "Hand-labeled sample (D-1, D-8): the correct tags (owner tags + taxonomy tags), type and related notes for 20 notes. Related = every other non-inbox note on the same topic.",
+  "notes": {
+    "logs/sourdough-starter-log.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "log",
+      "related": [
+        "sourdough-hydration-table",
+        "weeknight-bean-stew",
+        "bread-oven-schedule",
+        "fermented-hot-sauce",
+        "knife-sharpening-angles",
+        "pantry-restock-list",
+        "quick-note-proofing-box"
+      ]
+    },
+    "reference/sourdough-hydration-table.md": {
+      "tags": [
+        "topic/cooking"
+      ],
+      "type": "reference",
+      "related": [
+        "sourdough-starter-log",
+        "weeknight-bean-stew",
+        "bread-oven-schedule",
+        "fermented-hot-sauce",
+        "knife-sharpening-angles",
+        "pantry-restock-list",
+        "quick-note-proofing-box"
+      ]
+    },
+    "projects/bread-oven-schedule.md": {
+      "tags": [
+        "pinned",
+        "status/active",
+        "topic/cooking"
+      ],
+      "type": "project",
+      "related": [
+        "sourdough-starter-log",
+        "sourdough-hydration-table",
+        "weeknight-bean-stew",
+        "fermented-hot-sauce",
+        "knife-sharpening-angles",
+        "pantry-restock-list",
+        "quick-note-proofing-box"
+      ]
+    },
+    "projects/tomato-bed-rotation.md": {
+      "tags": [
+        "pinned",
+        "status/active",
+        "topic/gardening"
+      ],
+      "type": "project",
+      "related": [
+        "compost-temperature-log",
+        "seed-starting-calendar",
+        "drip-irrigation-plan",
+        "pollinator-strip-idea",
+        "frost-dates-reference",
+        "garlic-planting-log",
+        "clipped-mulch-tips"
+      ]
+    },
+    "reference/seed-starting-calendar.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "reference",
+      "related": [
+        "tomato-bed-rotation",
+        "compost-temperature-log",
+        "drip-irrigation-plan",
+        "pollinator-strip-idea",
+        "frost-dates-reference",
+        "garlic-planting-log",
+        "clipped-mulch-tips"
+      ]
+    },
+    "reference/sqlite-wal-notes.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "related": [
+        "cli-todo-tool",
+        "python-packaging-notes",
+        "regex-cheatsheet",
+        "test-fixture-patterns",
+        "static-site-idea",
+        "refactor-log-cli"
+      ]
+    },
+    "reference/regex-cheatsheet.md": {
+      "tags": [
+        "topic/programming"
+      ],
+      "type": "reference",
+      "related": [
+        "cli-todo-tool",
+        "python-packaging-notes",
+        "sqlite-wal-notes",
+        "test-fixture-patterns",
+        "static-site-idea",
+        "refactor-log-cli"
+      ]
+    },
+    "ideas/static-site-idea.md": {
+      "tags": [
+        "pinned",
+        "status/someday",
+        "topic/programming"
+      ],
+      "type": "idea",
+      "related": [
+        "cli-todo-tool",
+        "python-packaging-notes",
+        "sqlite-wal-notes",
+        "regex-cheatsheet",
+        "test-fixture-patterns",
+        "refactor-log-cli"
+      ]
+    },
+    "projects/messier-observing-list.md": {
+      "tags": [
+        "status/active",
+        "topic/astronomy"
+      ],
+      "type": "project",
+      "related": [
+        "telescope-collimation",
+        "moon-phase-log",
+        "dark-sky-sites",
+        "astrophotography-idea",
+        "eyepiece-comparison",
+        "star-party-checklist"
+      ]
+    },
+    "logs/moon-phase-log.md": {
+      "tags": [
+        "pinned",
+        "topic/astronomy"
+      ],
+      "type": "log",
+      "related": [
+        "telescope-collimation",
+        "messier-observing-list",
+        "dark-sky-sites",
+        "astrophotography-idea",
+        "eyepiece-comparison",
+        "star-party-checklist"
+      ]
+    },
+    "reference/caulk-types-reference.md": {
+      "tags": [
+        "topic/home-repair"
+      ],
+      "type": "reference",
+      "related": [
+        "bathroom-fan-replacement",
+        "door-hinge-squeak",
+        "gutter-cleaning-schedule",
+        "shelf-anchor-guide",
+        "workbench-build-idea",
+        "todo-fix-leaky-faucet"
+      ]
+    },
+    "projects/gutter-cleaning-schedule.md": {
+      "tags": [
+        "status/active",
+        "topic/home-repair"
+      ],
+      "type": "project",
+      "related": [
+        "bathroom-fan-replacement",
+        "door-hinge-squeak",
+        "caulk-types-reference",
+        "shelf-anchor-guide",
+        "workbench-build-idea",
+        "todo-fix-leaky-faucet"
+      ]
+    },
+    "reference/highlight-review-method.md": {
+      "tags": [
+        "topic/reading"
+      ],
+      "type": "reference",
+      "related": [
+        "reading-list-autumn",
+        "notes-the-patient-orchard",
+        "notes-maps-of-small-rivers",
+        "book-club-question-bank",
+        "reading-log-october"
+      ]
+    },
+    "ideas/hill-repeats-idea.md": {
+      "tags": [
+        "pinned",
+        "status/someday",
+        "topic/fitness"
+      ],
+      "type": "idea",
+      "related": [
+        "10k-training-plan",
+        "stretching-routine",
+        "run-log-week-41",
+        "shoe-rotation",
+        "strength-basics",
+        "pacing-notes"
+      ]
+    },
+    "reference/stretching-routine.md": {
+      "tags": [
+        "topic/fitness"
+      ],
+      "type": "reference",
+      "related": [
+        "10k-training-plan",
+        "run-log-week-41",
+        "shoe-rotation",
+        "hill-repeats-idea",
+        "strength-basics",
+        "pacing-notes"
+      ]
+    },
+    "reference/commute-route-options.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "reference",
+      "related": [
+        "bike-chain-maintenance",
+        "tubeless-conversion",
+        "ride-log-october",
+        "bikepacking-trip-idea",
+        "brake-pad-wear-check"
+      ]
+    },
+    "logs/ride-log-october.md": {
+      "tags": [
+        "topic/cycling"
+      ],
+      "type": "log",
+      "related": [
+        "bike-chain-maintenance",
+        "commute-route-options",
+        "tubeless-conversion",
+        "bikepacking-trip-idea",
+        "brake-pad-wear-check"
+      ]
+    },
+    "ideas/dns-filtering-idea.md": {
+      "tags": [
+        "status/someday",
+        "topic/networking"
+      ],
+      "type": "idea",
+      "related": [
+        "home-network-map",
+        "wifi-mesh-upgrade",
+        "router-firmware-log",
+        "vlan-notes",
+        "backup-nas-plan",
+        "router-reboot-again"
+      ]
+    },
+    "inbox/clipped-mulch-tips.md": {
+      "tags": [
+        "topic/gardening"
+      ],
+      "type": "reference",
+      "related": [
+        "tomato-bed-rotation",
+        "compost-temperature-log",
+        "seed-starting-calendar",
+        "drip-irrigation-plan",
+        "pollinator-strip-idea",
+        "frost-dates-reference",
+        "garlic-planting-log"
+      ]
+    },
+    "inbox/todo-fix-leaky-faucet.md": {
+      "tags": [
+        "status/active",
+        "topic/home-repair"
+      ],
+      "type": "project",
+      "related": [
+        "bathroom-fan-replacement",
+        "door-hinge-squeak",
+        "caulk-types-reference",
+        "gutter-cleaning-schedule",
+        "shelf-anchor-guide",
+        "workbench-build-idea"
+      ]
+    }
+  }
+}

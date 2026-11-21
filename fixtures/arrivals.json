@@ -1,0 +1,59 @@
+{
+  "_about": "Events applied to the copy vault between simulated ticks (D-19): inbox arrivals and owner body edits.",
+  "events": [
+    {
+      "tick": 5,
+      "action": "add",
+      "path": "inbox/pizza-dough-test.md",
+      "source": "arrivals/pizza-dough-test.md"
+    },
+    {
+      "tick": 18,
+      "action": "add",
+      "path": "inbox/aphids-on-the-kale.md",
+      "source": "arrivals/aphids-on-the-kale.md"
+    },
+    {
+      "tick": 25,
+      "action": "user_edit",
+      "path": "logs/sourdough-starter-log.md",
+      "append": "\n2026-11-21: Starter doubled in five hours.\n"
+    },
+    {
+      "tick": 33,
+      "action": "add",
+      "path": "inbox/typing-tip-protocols.md",
+      "source": "arrivals/typing-tip-protocols.md"
+    },
+    {
+      "tick": 47,
+      "action": "add",
+      "path": "inbox/meteor-shower-dates.md",
+      "source": "arrivals/meteor-shower-dates.md"
+    },
+    {
+      "tick": 55,
+      "action": "user_edit",
+      "path": "projects/tomato-bed-rotation.md",
+      "append": "\nNext season: beans in the east bed.\n"
+    },
+    {
+      "tick": 62,
+      "action": "add",
+      "path": "inbox/saddle-height-fix.md",
+      "source": "arrivals/saddle-height-fix.md"
+    },
+    {
+      "tick": 70,
+      "action": "user_edit",
+      "path": "projects/cli-todo-tool.md",
+      "append": "\nAdd a --due flag.\n"
+    },
+    {
+      "tick": 80,
+      "action": "add",
+      "path": "inbox/novel-recommendation.md",
+      "source": "arrivals/novel-recommendation.md"
+    }
+  ]
+}
