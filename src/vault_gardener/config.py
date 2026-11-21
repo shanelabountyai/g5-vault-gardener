@@ -26,8 +26,8 @@ LEASE_SECONDS = 120  # D-14
 # D-4 (provisional): HEADROOM x the recorded 96-tick day, rounded up. The recorded day's tokens are an estimate
 # (characters / 4, D-9); `test_default_limits_match_recorded_day` re-derives these from a fresh simulation.
 HEADROOM = 3
-RECORDED_DAY_COST_USD = 0.015637  # `gardener simulate --ticks 96`, 2026-11-21: 145 calls, estimated tokens
-RECORDED_DAY_TOKENS = 144_809
+RECORDED_DAY_COST_USD = 0.015636  # `gardener simulate --ticks 96`, 2026-11-21: 145 calls, estimated tokens
+RECORDED_DAY_TOKENS = 144_796
 DEFAULT_DAILY_CAP_USD = 0.05  # derive_cap_usd(RECORDED_DAY_COST_USD)
 DEFAULT_DAILY_TOKEN_BUDGET = 440_000  # derive_token_budget(RECORDED_DAY_TOKENS)
 

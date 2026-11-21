@@ -39,6 +39,7 @@ allow-direct-references = true  # the G0 git pin above
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 
 [tool.ruff]

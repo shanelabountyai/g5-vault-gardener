@@ -127,6 +127,7 @@ class State:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA busy_timeout=30000")
+        self.conn.execute("PRAGMA synchronous=NORMAL")  # WAL + NORMAL: no corruption on crash; reconcile() settles the rest
         self.conn.executescript(SCHEMA)
 
     def close(self) -> None:
@@ -394,6 +395,14 @@ class State:
                 breaks.append(f"{ch['path']}: change {ch['change_id']} did not start from the previous change's result")
             last[ch["path"]] = ch["after_hash"]
         return breaks
+
+    def lost_updates(self) -> list[str]:
+        """Two applied agent changes to one note that started from the same version: the later one overwrote the
+        earlier one's work. Owner edits between changes are allowed (they legitimately break the strict chain)."""
+        rows = self.conn.execute(
+            "SELECT path, before_hash, COUNT(*) n, GROUP_CONCAT(change_id) ids FROM changes WHERE status IN ('applied','reverted') "
+            "AND agent != 'revert' GROUP BY path, before_hash HAVING n > 1").fetchall()
+        return [f"{r['path']}: changes {r['ids']} all started from the same version" for r in rows]
 
     # -- reporting helpers -----------------------------------------------------
 

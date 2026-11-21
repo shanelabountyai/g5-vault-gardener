@@ -271,7 +271,9 @@ def link(ctx: Context, path: str, cat: dict[str, dict[str, Any]]) -> str:
         accepted = [s for s in dict.fromkeys(related) if s in cat and s != me][:MAX_LINKS]
         rejected = [s for s in related if s not in cat or s == me]
         ctx.counts.links_rejected.extend(rejected)
-        existing = note.parse(text).related
+        parsed = note.parse(text)
+        existing = parsed.related
+        in_body = parsed.body_links()  # the owner's own links (or a block the owner typed below) are never repeated
         if ctx.suggest_only:
             if ctx.suggestions_file is not None:
                 with open(ctx.suggestions_file, "a", encoding="utf-8") as f:
@@ -280,7 +282,7 @@ def link(ctx: Context, path: str, cat: dict[str, dict[str, Any]]) -> str:
             ctx.state.set_fields(path, status="done", attempts=0, linked_at=ctx.state.now_iso(), links_rejected=json.dumps(rejected))
             ctx.counts.notes_linked += 1
             return "suggested"
-        merged = list(existing) + [s for s in accepted if s not in existing]
+        merged = list(existing) + [s for s in accepted if s not in existing and s not in in_body]
         new_text = note.set_related(text, merged) if merged else text
         res = _write(ctx, "linker", path, text, new_text, status="done", attempts=0, linked_at=ctx.state.now_iso(),
                      links_rejected=json.dumps(rejected))

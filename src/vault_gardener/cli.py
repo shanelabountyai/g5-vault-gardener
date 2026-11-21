@@ -103,7 +103,8 @@ def cmd_simulate(a: argparse.Namespace) -> int:
         layer.close()
     if a.report:
         Path(a.report).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.report).write_text(report_mod.render_markdown(rep, title=f"Vault Gardener — daily report ({res.ticks_run}-tick simulated day)"), encoding="utf-8")
+        title = f"Vault Gardener — daily report ({res.ticks_run}-tick simulated day)"
+        Path(a.report).write_text(report_mod.render_markdown(rep, title=title), encoding="utf-8")
     out = {"state_dir": str(state_dir), "simulation": s, "daily_report": {k: rep[k] for k in ("notes_processed", "links_added", "tags_added", "errors",
                                                                                             "tokens", "cost_usd", "tokens_estimated")}}
     _print(out)

@@ -57,9 +57,11 @@ def run_demo(out: Path | None = None) -> int:
           f"cost ${rep['cost_usd']:.4f} (estimated) → {root / 'daily-report.md'}")
     ok &= s["bodies_changed_by_agents"] == 0 and s["files_deleted"] == 0 and s["consistency_problems"] == 0 and s["supervisor_trips"] == 0
 
-    for kind in ("cost-spike", "error-burst"):
-        print(f"\n2) forced {kind} from tick 10")
-        r = simulate(root / kind, ticks=96, inject=(kind, 10))  # type: ignore[arg-type]
+    # Cost spike from mid-morning (it lands on the next arrival); error burst on the start-up backlog, where enough
+    # calls happen close together to make a burst (D-25).
+    for kind, at in (("cost-spike", 10), ("error-burst", 0)):
+        print(f"\n2) forced {kind} from tick {at}")
+        r = simulate(root / kind, ticks=96, inject=(kind, at))  # type: ignore[arg-type]
         rs = r.summary()
         trip = r.trips[0] if r.trips else {}
         print(f"   tripped: {bool(r.trips)} ({trip.get('reason')}) at tick {rs['stopped_at_tick']} · model calls in the 3 ticks after: "

@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Any
 
 import yaml
@@ -22,6 +23,7 @@ RELATED_END = "<!-- gardener:related:end -->"
 BLOCK_SEP = "\n\n"
 EDITABLE_KEYS = ("tags", "type")
 
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 _KEY_RE = re.compile(r"^([A-Za-z_][\w-]*):(.*)$")
 
 
@@ -43,13 +45,21 @@ class Note:
         return sha256(self.body)
 
     def frontmatter(self) -> dict[str, Any]:
+        return self._fm
+
+    @cached_property
+    def _fm(self) -> dict[str, Any]:
         if not self.fm_lines:
             return {}
         try:
-            data = yaml.safe_load("\n".join(self.fm_lines))
+            data = yaml.load("\n".join(self.fm_lines), Loader=_Loader)  # noqa: S506 - a SafeLoader
         except yaml.YAMLError:
             return {}
         return data if isinstance(data, dict) else {}
+
+    def body_links(self) -> set[str]:
+        """Wiki-link targets written anywhere in the owner's body."""
+        return {m.group(1).strip() for m in re.finditer(r"\[\[([^\]|#]+)", self.body)}
 
     def tags(self) -> list[str]:
         raw = self.frontmatter().get("tags")
