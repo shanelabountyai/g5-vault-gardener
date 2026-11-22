@@ -281,7 +281,7 @@ class State:
 
     def reconcile(self) -> dict[str, int]:
         """Settle `pending` changes left by a crash between log and write (D-14)."""
-        out = {"applied": 0, "aborted": 0, "inconsistent": 0}
+        out = {"applied": 0, "aborted": 0, "superseded": 0}
         for ch in list(self.conn.execute("SELECT * FROM changes WHERE status='pending' ORDER BY change_id")):
             current = read_text(self.vault / ch["path"])
             h = note.sha256(current) if current is not None else None
@@ -295,7 +295,11 @@ class State:
                     c.execute("UPDATE changes SET status='aborted' WHERE change_id=?", (ch["change_id"],))
                 out["aborted"] += 1
             else:
-                out["inconsistent"] += 1
+                # The file matches neither side: someone (the owner) changed it after the crash. The file is the
+                # truth; the half-written change is closed so the Watcher picks the note up again (review S9).
+                with self.tx() as c:
+                    c.execute("UPDATE changes SET status='superseded' WHERE change_id=?", (ch["change_id"],))
+                out["superseded"] += 1
         return out
 
     # -- revert (D-17) ---------------------------------------------------------

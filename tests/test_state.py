@@ -93,6 +93,23 @@ def test_reconcile_settles_half_written_changes(st: State, vault: Path) -> None:
         st.conn.execute("UPDATE notes SET content_hash=? WHERE path=?", (note.sha256(text), P))
 
 
+def test_half_written_change_overtaken_by_an_owner_edit_does_not_stall_the_note(st: State, vault: Path) -> None:
+    # Review 2026-11-22 S9: crash between log and write, then the owner edits the file before restart. The pending
+    # row matched neither hash, stayed pending forever, and observe() returned "busy" for the note on every tick.
+    text = (vault / P).read_text()
+    new = note.set_related(text, ["x"])
+    st.observe(P)
+    st.conn.execute("INSERT INTO changes (run_id,tick,agent,path,before_text,after_text,before_hash,after_hash,status,at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    ("r", 0, "linker", P, text, new, note.sha256(text), note.sha256(new), "pending", "t"))
+    (vault / P).write_text(text + "owner edit after the crash\n")
+    out = st.reconcile()
+    assert out["superseded"] == 1
+    assert st.conn.execute("SELECT status FROM changes ORDER BY change_id DESC").fetchone()[0] == "superseded"
+    assert st.observe(P) == "changed"
+    assert st.row(P)["status"] == "pending_classify"
+    assert st.check_consistency() == []
+
+
 def test_consistency_catches_held_lock_and_untracked_write(st: State, vault: Path) -> None:
     assert st.check_consistency() == []
     st.try_lock(P, "a", 120)
