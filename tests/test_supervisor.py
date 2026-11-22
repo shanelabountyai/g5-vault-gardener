@@ -135,3 +135,27 @@ def test_fault_injector_passes_through_before_its_tick() -> None:
     assert r.input_tokens < 1000 and f.injected == 0
     f.tick = 3
     assert f.call(CLASSIFIER, "x", "classifier:reference/vlan-notes.md").input_tokens > 1_000_000
+
+
+def test_kill_switch_set_during_a_call_stops_that_calls_write(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S8: the switch was checked only before each call, so a `gardener kill` that landed during a
+    # call still let that call's result be written.
+    class KillDuring(RecordedCaller):
+        def __init__(self, state, n: int) -> None:  # type: ignore[no-untyped-def]
+            super().__init__()
+            self.state, self.n, self.key = state, n, ""
+
+        def call(self, spec, user_text, key) -> CallResult:  # type: ignore[no-untyped-def]
+            if sum(self.calls.values()) == self.n - 1:
+                self.state.set_killed("manual", "owner pressed stop", None)
+                self.key = key
+            return super().call(spec, user_text, key)
+
+    w = make_worker()
+    caller = KillDuring(w.state, 5)
+    w.caller = caller
+    r = w.tick()
+    assert r.status == "tripped" and r.reason == "manual"
+    killed_path = caller.key.split(":", 1)[1]
+    assert w.state.conn.execute("SELECT COUNT(*) FROM changes WHERE path=?", (killed_path,)).fetchone()[0] == 0
+    assert w.state.check_consistency() == []

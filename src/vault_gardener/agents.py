@@ -155,6 +155,8 @@ def _unsupported(ctx: Context, path: str) -> str:
 def _write(ctx: Context, agent: str, path: str, based_on: str, new_text: str, **row_updates: Any) -> str:
     # A model call can outlast the lease (slow call, sleeping laptop): renew it, or count a conflict if another
     # agent took it meanwhile. CAS in write_note still guards the file (review 2026-11-22 S6).
+    if ctx.state.kill_state() is not None:
+        ctx.supervisor.check(ctx.run_id)  # raises Tripped: a kill that landed during the model call stops this write (S8)
     if not ctx.state.try_lock(path, ctx.owner, ctx.lease_s):
         ctx.counts.conflicts += 1
         return "conflict"
