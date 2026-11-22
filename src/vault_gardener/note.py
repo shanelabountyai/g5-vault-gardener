@@ -106,6 +106,8 @@ class Note:
 def unsupported(text: str) -> str | None:
     """Why the agents must leave this note alone (None = they may edit it). Edits are line-based on `\n`; a note
     they cannot edit without rewriting bytes outside tags/type/Related is skipped, never "fixed" (review 2026-11-22)."""
+    if text.startswith("\ufeff"):
+        return "starts with a byte-order mark"
     if "\r" in text:
         return "CR/CRLF line endings"
     return parse(text).frontmatter_problem()

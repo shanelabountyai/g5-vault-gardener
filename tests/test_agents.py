@@ -171,3 +171,13 @@ def test_owner_tags_survive_frontmatter_that_is_not_valid_yaml(make_worker, vaul
     assert p.read_bytes() == raw
     assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
 
+
+def test_note_with_a_byte_order_mark_is_left_alone(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S5: "﻿---" was read as no frontmatter, so a second frontmatter block was put in front.
+    p = vault / "projects/bread-oven-schedule.md"
+    raw = "﻿".encode() + p.read_bytes()
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    assert p.read_bytes() == raw
+    assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
