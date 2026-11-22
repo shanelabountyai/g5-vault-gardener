@@ -108,6 +108,10 @@ class Worker:
             except Tripped as t:
                 status, reason, detail = "tripped", t.reason, t.detail
                 span.add_event("gardener.stopped", {"reason": t.reason})
+            except BaseException as e:
+                # Never log a crashed tick as "ok" (review 2026-11-22 S6); the exception still propagates.
+                status, reason, detail = "crashed", type(e).__name__, str(e)[:500]
+                raise
             finally:
                 self.state.finish_run(run_id, status, counts.for_db())
                 self.layer.record("vault_gardener.tick", {"tick": tick, "status": status, **counts.for_db()}, run_id=day,

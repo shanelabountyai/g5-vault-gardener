@@ -23,7 +23,7 @@ from vault_gardener import note
 from vault_gardener.config import LEASE_SECONDS, MAX_ATTEMPTS, MAX_LINKS
 from vault_gardener.llm import CLASSIFIER, LINKER, AgentSpec, CallResult, ModelCaller, ModelCallError
 from vault_gardener.safety import SafetyViolation
-from vault_gardener.state import State, read_text
+from vault_gardener.state import LockLost, State, read_text
 from vault_gardener.supervisor import Supervisor
 
 
@@ -153,9 +153,17 @@ def _unsupported(ctx: Context, path: str) -> str:
 
 
 def _write(ctx: Context, agent: str, path: str, based_on: str, new_text: str, **row_updates: Any) -> str:
+    # A model call can outlast the lease (slow call, sleeping laptop): renew it, or count a conflict if another
+    # agent took it meanwhile. CAS in write_note still guards the file (review 2026-11-22 S6).
+    if not ctx.state.try_lock(path, ctx.owner, ctx.lease_s):
+        ctx.counts.conflicts += 1
+        return "conflict"
     try:
         res = ctx.state.write_note(path=path, owner=ctx.owner, run_id=ctx.run_id, tick=ctx.tick, agent=agent, based_on=based_on,
                                    new_text=new_text, **row_updates)
+    except LockLost:
+        ctx.counts.conflicts += 1
+        return "conflict"
     except SafetyViolation as e:
         ctx.counts.errors += 1
         ctx.state.add_error(ctx.run_id, ctx.tick, agent, path, "safety", str(e))

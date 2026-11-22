@@ -165,3 +165,46 @@ def test_ac4_two_worker_processes(tmp_path: Path) -> None:
     assert done == 62  # every note but the malformed one, each linked exactly once between the two processes
     dup = st.conn.execute("SELECT path FROM changes WHERE agent='linker' GROUP BY path HAVING COUNT(*) > 1").fetchall()
     assert dup == []
+
+
+def test_slow_model_call_past_the_lease_renews_instead_of_crashing(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Overnight review 2026-11-22 S6: a call longer than the 120 s lease (slow SDK call, laptop asleep) raised an
+    # uncaught LockLost, the process died and the run row still said "ok".
+    from vault_gardener.clock import SimClock
+    from vault_gardener.llm import CallResult, RecordedCaller
+
+    clock = SimClock()
+
+    class Slow(RecordedCaller):
+        def call(self, spec, user_text, key) -> CallResult:  # type: ignore[no-untyped-def]
+            clock.advance(200)
+            return super().call(spec, user_text, key)
+
+    w = make_worker(clock=clock, caller=Slow())
+    r = w.tick()
+    assert r.status == "ok" and r.counts.notes_classified > 0
+    assert w.state.check_consistency() == []
+
+
+def test_lease_taken_over_during_a_call_is_a_conflict_not_a_crash(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    from vault_gardener.clock import SimClock
+    from vault_gardener.llm import CallResult, RecordedCaller
+
+    clock = SimClock()
+    holder: dict[str, object] = {}
+
+    class Thief(RecordedCaller):
+        def call(self, spec, user_text, key) -> CallResult:  # type: ignore[no-untyped-def]
+            if sum(self.calls.values()) == 0:
+                clock.advance(200)  # our lease expires ...
+                path = key.split(":", 1)[1]
+                assert holder["w"].state.try_lock(path, "other-worker", 120)  # type: ignore[attr-defined]  # ... and is taken
+                holder["path"] = path
+            return super().call(spec, user_text, key)
+
+    w = make_worker(clock=clock, caller=Thief())
+    holder["w"] = w
+    r = w.tick()
+    assert r.status == "ok" and r.counts.conflicts == 1
+    w.state.unlock(str(holder["path"]), "other-worker")
+    assert w.state.row(str(holder["path"]))["status"] == "pending_classify"  # retried next tick
