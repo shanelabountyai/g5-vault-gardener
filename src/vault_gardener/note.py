@@ -161,6 +161,9 @@ def key_blocks(fm_lines: tuple[str, ...]) -> list[tuple[str | None, tuple[str, .
         m = _KEY_RE.match(line)
         if m and not line[:1].isspace():
             blocks.append((m.group(1), [line]))
+        elif not line.strip() or line.startswith("#"):
+            # A top-level comment or blank line belongs to no key: it must survive a tags/type rewrite (review S4).
+            blocks.append((None, [line]))
         elif blocks:
             blocks[-1][1].append(line)
         else:

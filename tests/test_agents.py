@@ -194,3 +194,14 @@ def test_owner_tags_that_need_quoting_do_not_trip_the_job(make_worker, vault: Pa
     assert r.status == "ok", r.reason
     after = note.parse(p.read_text())
     assert after.tags()[:3] == ["#garden", "null", "yes"] and len(after.tags()) > 3
+
+
+def test_frontmatter_comment_and_blank_lines_survive_a_classify(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S4: a "# ..." line after the tags list was grouped into the tags block and dropped (D-12).
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    p.write_text("---\ncreated: 2026-10-04\ntags:\n  - pinned\n# keep this comment\n\nsource: kitchen\n---\n" + body)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    fm = p.read_text().split("---\n")[1]
+    assert "# keep this comment\n\nsource: kitchen\n" in fm and "topic/cooking" in fm
