@@ -208,3 +208,33 @@ def test_lease_taken_over_during_a_call_is_a_conflict_not_a_crash(make_worker, v
     assert r.status == "ok" and r.counts.conflicts == 1
     w.state.unlock(str(holder["path"]), "other-worker")
     assert w.state.row(str(holder["path"]))["status"] == "pending_classify"  # retried next tick
+
+
+def test_owner_save_during_the_write_is_not_overwritten(tmp_path: Path, vault: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S7: the CAS read happened before the change-log insert and the fsync; an owner save in that
+    # window was overwritten and appeared in no before_text, so revert could not bring it back.
+    import os as _os
+
+    from vault_gardener import state as state_mod
+
+    st = State(tmp_path / "s.sqlite", vault, SimClock())
+    st.observe(P)
+    v0 = (vault / P).read_text()
+    real_fsync = _os.fsync
+    fired: list[int] = []
+
+    def owner_saves_mid_write(fd: int) -> None:
+        real_fsync(fd)
+        if not fired:
+            fired.append(fd)
+            with open(vault / P, "a", encoding="utf-8") as f:
+                f.write("owner typed this\n")
+
+    monkeypatch.setattr(state_mod.os, "fsync", owner_saves_mid_write)
+    with st.lock(P, "classifier", 120):
+        res = st.write_note(path=P, owner="classifier", run_id="r", tick=0, agent="classifier", based_on=v0,
+                            new_text=note.set_frontmatter(v0, tags=["topic/programming"]))
+    assert fired and res == "conflict"
+    assert (vault / P).read_text() == v0 + "owner typed this\n"
+    assert st.conn.execute("SELECT COUNT(*) FROM changes WHERE status='pending'").fetchone()[0] == 0
+    assert not list(vault.glob(f"**/.{Path(P).name}.gardener-tmp-*"))

@@ -111,13 +111,23 @@ def read_text(path: Path) -> str | None:
         return None
 
 
-def atomic_write(path: Path, text: str) -> None:
+def atomic_write(path: Path, text: str, expect_hash: str | None = None) -> bool:
+    """Write via a temp file and rename. With `expect_hash`, re-check the file right before the rename and give up
+    (temp file removed, False) if it changed: an owner save during the write wins (review 2026-11-22 S7). This
+    narrows the window to the instant between that read and `os.replace`; a plain filesystem offers no atomic
+    compare-and-rename."""
     tmp = path.with_name(f".{path.name}.gardener-tmp-{uuid.uuid4().hex[:8]}")
     with open(tmp, "w", encoding="utf-8", newline="") as f:
         f.write(text)
         f.flush()
         os.fsync(f.fileno())
+    if expect_hash is not None:
+        current = read_text(path)
+        if current is None or note.sha256(current) != expect_hash:
+            tmp.unlink(missing_ok=True)
+            return False
     os.replace(tmp, path)
+    return True
 
 
 class State:
@@ -258,7 +268,10 @@ class State:
                 (run_id, tick, agent, path, based_on, new_text, b_hash, a_hash, "pending", self.now_iso()),
             )
             change_id = cur.lastrowid
-        atomic_write(file, new_text)
+        if not atomic_write(file, new_text, expect_hash=b_hash):
+            with self.tx() as c:
+                c.execute("UPDATE changes SET status='aborted' WHERE change_id=?", (change_id,))
+            return "conflict"
         updates = {"content_hash": a_hash, "body_hash": note.body_hash(new_text), **row_updates}
         cols = ", ".join(f"{k}=?" for k in updates)
         with self.tx() as c:
