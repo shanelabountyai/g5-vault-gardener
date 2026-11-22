@@ -181,3 +181,16 @@ def test_note_with_a_byte_order_mark_is_left_alone(make_worker, vault: Path) -> 
     assert w.tick().status == "ok"
     assert p.read_bytes() == raw
     assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
+
+
+def test_owner_tags_that_need_quoting_do_not_trip_the_job(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S3: tags were re-rendered unquoted, so "#garden" became a YAML comment and 'null' became
+    # None; the safety check refused the write and the supervisor tripped the whole job on one ordinary tag.
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    p.write_text("---\ncreated: 2026-10-04\ntags:\n  - \"#garden\"\n  - 'null'\n  - \"yes\"\n---\n" + body)
+    w = make_worker()
+    r = w.tick()
+    assert r.status == "ok", r.reason
+    after = note.parse(p.read_text())
+    assert after.tags()[:3] == ["#garden", "null", "yes"] and len(after.tags()) > 3

@@ -11,6 +11,7 @@ carried over untouched. YAML is parsed for *reading* values only, never re-seria
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from dataclasses import dataclass
 from functools import cached_property
@@ -167,8 +168,19 @@ def key_blocks(fm_lines: tuple[str, ...]) -> list[tuple[str | None, tuple[str, .
     return [(k, tuple(v)) for k, v in blocks]
 
 
+def _scalar(t: str) -> str:
+    """`t` as a YAML list item that reads back as exactly `t`: plain when it round-trips, JSON-quoted otherwise
+    ("#tag" would be a comment, null/yes/1 would change type). Review 2026-11-22 S3."""
+    try:
+        if yaml.load(f"- {t}", Loader=_Loader) == [t]:  # noqa: S506 - a SafeLoader
+            return t
+    except yaml.YAMLError:
+        pass
+    return json.dumps(t, ensure_ascii=False)
+
+
 def render_tags(tags: list[str]) -> tuple[str, ...]:
-    return ("tags:", *(f"  - {t}" for t in tags))
+    return ("tags:", *(f"  - {_scalar(t)}" for t in tags))
 
 
 def set_frontmatter(text: str, *, tags: list[str] | None = None, type_: str | None = None) -> str:
