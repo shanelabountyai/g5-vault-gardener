@@ -158,3 +158,16 @@ def test_crlf_note_is_left_byte_identical(make_worker, vault: Path) -> None:  # 
     assert w.state.check_consistency() == []
     w.state.revert()
     assert p.read_bytes() == raw
+
+
+def test_owner_tags_survive_frontmatter_that_is_not_valid_yaml(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 M2: unparseable YAML read as {} → tags [] → the Classifier replaced the owner's tag block.
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    raw = ("---\ntitle: Notes: part two\ntags:\n  - mine\n---\n" + body).encode()
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    assert p.read_bytes() == raw
+    assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
+

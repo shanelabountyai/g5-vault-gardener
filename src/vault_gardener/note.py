@@ -57,6 +57,27 @@ class Note:
             return {}
         return data if isinstance(data, dict) else {}
 
+    def frontmatter_problem(self) -> str | None:
+        """Why tags/type cannot be read reliably (None = fine). Unreadable means an owner's tags would look absent."""
+        if not self.fm_lines:
+            return None
+        try:
+            data = yaml.load("\n".join(self.fm_lines), Loader=_Loader)  # noqa: S506 - a SafeLoader
+        except yaml.YAMLError:
+            return "frontmatter is not valid YAML"
+        if data is None:
+            return None
+        if not isinstance(data, dict):
+            return "frontmatter is not a key: value mapping"
+        tags, ntype = data.get("tags"), data.get("type")
+        if tags is not None and not isinstance(tags, (str, list)):
+            return "tags has an unexpected shape"
+        if isinstance(tags, list) and not all(isinstance(t, (str, int, float)) and not isinstance(t, bool) for t in tags):
+            return "a tag is not a plain value"
+        if ntype is not None and not isinstance(ntype, (str, int, float)):
+            return "type has an unexpected shape"
+        return None
+
     def body_links(self) -> set[str]:
         """Wiki-link targets written anywhere in the owner's body."""
         return {m.group(1).strip() for m in re.finditer(r"\[\[([^\]|#]+)", self.body)}
@@ -87,7 +108,7 @@ def unsupported(text: str) -> str | None:
     they cannot edit without rewriting bytes outside tags/type/Related is skipped, never "fixed" (review 2026-11-22)."""
     if "\r" in text:
         return "CR/CRLF line endings"
-    return None
+    return parse(text).frontmatter_problem()
 
 
 def split_frontmatter(text: str) -> tuple[tuple[str, ...] | None, str]:
