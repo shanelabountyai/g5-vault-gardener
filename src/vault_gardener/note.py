@@ -82,6 +82,14 @@ class Note:
         return ""
 
 
+def unsupported(text: str) -> str | None:
+    """Why the agents must leave this note alone (None = they may edit it). Edits are line-based on `\n`; a note
+    they cannot edit without rewriting bytes outside tags/type/Related is skipped, never "fixed" (review 2026-11-22)."""
+    if "\r" in text:
+        return "CR/CRLF line endings"
+    return None
+
+
 def split_frontmatter(text: str) -> tuple[tuple[str, ...] | None, str]:
     """Return (frontmatter lines, rest). Frontmatter must open on line 1 with `---` and close with `---`."""
     if not text.startswith("---\n"):

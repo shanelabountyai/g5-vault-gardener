@@ -33,7 +33,7 @@ def copy_fixture(dest: Path, source: Path | None = None) -> Path:
 
 
 def body_hashes(vault: Path) -> dict[str, str]:
-    return {p.relative_to(vault).as_posix(): note.body_hash(p.read_text(encoding="utf-8"))
+    return {p.relative_to(vault).as_posix(): note.body_hash(p.read_bytes().decode("utf-8"))
             for p in sorted(vault.rglob("*.md")) if not any(part.startswith(".") for part in p.relative_to(vault).parts)}
 
 

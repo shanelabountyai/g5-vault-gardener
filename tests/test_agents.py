@@ -138,3 +138,23 @@ def test_no_network_client_in_the_package() -> None:
         t = f.read_text()
         for mod in ("import requests", "import httpx", "urllib.request", "import smtplib", "import socket"):
             assert mod not in t, (f.name, mod)
+
+
+def _status(w, path: str) -> str:  # type: ignore[no-untyped-def]
+    return str(w.state.row(path)["status"])
+
+
+def test_crlf_note_is_left_byte_identical(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Overnight review 2026-11-22 M1: universal-newline reads turned \r\n into \n on the first write, and every
+    # body-hash check hashed the converted text, so nothing noticed.
+    p = vault / "projects/bread-oven-schedule.md"
+    raw = p.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    p.write_bytes(raw)
+    w = make_worker()
+    r = w.tick()
+    assert r.status == "ok"
+    assert p.read_bytes() == raw
+    assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
+    assert w.state.check_consistency() == []
+    w.state.revert()
+    assert p.read_bytes() == raw

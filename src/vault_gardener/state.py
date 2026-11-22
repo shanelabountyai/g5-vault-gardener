@@ -25,7 +25,7 @@ from typing import Any, Literal
 from vault_gardener import note, safety
 from vault_gardener.clock import Clock, iso
 
-STATUSES = ("pending_classify", "pending_link", "done", "error", "missing", "reverted")
+STATUSES = ("pending_classify", "pending_link", "done", "error", "missing", "reverted", "unsupported")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS notes (
@@ -105,7 +105,8 @@ class LockLost(RuntimeError):
 
 def read_text(path: Path) -> str | None:
     try:
-        return path.read_text(encoding="utf-8")
+        # Bytes in, no newline translation: a CRLF note must hash (and be compared) as it is on disk (review M1).
+        return path.read_bytes().decode("utf-8")
     except FileNotFoundError:
         return None
 
