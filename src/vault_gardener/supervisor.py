@@ -87,6 +87,18 @@ class Supervisor:
             self.trip("error_burst", f"{n} errors in the last {self.limits.error_window_s // 60} min (limit {self.limits.error_burst}); "
                                      f"last: {agent} on {path}: {kind}", run_id)
 
+    def check_failure_rate(self, run_id: str, tick_calls: int, tick_errors: int) -> None:
+        """End of tick (D-34): trip when most attempts in the error window failed. Catches a steady-state outage that
+        never reaches the burst count because notes are parked after MAX_ATTEMPTS (D-25). An attempt is a model call
+        that returned plus an error; a malformed response counts as both, which only lowers the share."""
+        start = iso(self.clock.now() - timedelta(seconds=self.limits.error_window_s))
+        calls, errors = self.state.calls_and_errors_since(start, exclude_run=run_id)
+        calls, errors = calls + tick_calls, errors + tick_errors
+        attempts = calls + errors
+        if attempts >= self.limits.failure_min_attempts and errors / attempts >= self.limits.failure_share:
+            self.trip("failure_rate", f"{errors} of {attempts} attempts failed in the last {self.limits.error_window_s // 60} min "
+                                      f"(limit {self.limits.failure_share:.0%} of at least {self.limits.failure_min_attempts})", run_id)
+
     def trip(self, reason: str, detail: str, run_id: str | None) -> None:
         first = self.state.set_killed(reason, detail, run_id)
         if first:

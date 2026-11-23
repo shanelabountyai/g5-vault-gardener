@@ -354,6 +354,15 @@ class State:
             c.execute("INSERT INTO errors (run_id, tick, agent, path, kind, message, at, at_epoch) VALUES (?,?,?,?,?,?,?,?)",
                       (run_id, tick, agent, path, kind, message[:500], self.now_iso(), self.epoch()))
 
+    def calls_and_errors_since(self, start_iso: str, exclude_run: str) -> tuple[int, int]:
+        """(model calls, errors) summed over finished ticks that started at or after `start_iso` and after the
+        last resume (D-34). The running tick is excluded; the caller adds its live counts."""
+        r = self.conn.execute("SELECT value FROM supervisor WHERE key='resumed_at'").fetchone()
+        floor = max(start_iso, json.loads(r["value"])) if r else start_iso
+        row = self.conn.execute("SELECT COALESCE(SUM(model_calls),0), COALESCE(SUM(errors),0) FROM runs WHERE started_at >= ? AND run_id != ?",
+                                (floor, exclude_run)).fetchone()
+        return int(row[0]), int(row[1])
+
     def errors_since(self, epoch: float) -> int:
         """Errors at or after `epoch`, but never from before the last `resume` (D-33): a resume starts a fresh window."""
         r = self.conn.execute("SELECT value FROM supervisor WHERE key='errors_reset_after_id'").fetchone()
@@ -382,6 +391,7 @@ class State:
                 # Errors logged before the resume stay in the table but stop counting toward a burst (D-33).
                 last = c.execute("SELECT COALESCE(MAX(error_id), 0) FROM errors").fetchone()[0]
                 c.execute("INSERT OR REPLACE INTO supervisor (key, value) VALUES ('errors_reset_after_id', ?)", (json.dumps(int(last)),))
+                c.execute("INSERT OR REPLACE INTO supervisor (key, value) VALUES ('resumed_at', ?)", (json.dumps(self.now_iso()),))
             return cleared
 
     # -- consistency (D-15) ----------------------------------------------------

@@ -174,3 +174,18 @@ def test_resume_starts_a_fresh_error_window(make_worker) -> None:  # type: ignor
     w.supervisor.record_error(run_id="r", tick=0, agent="classifier", path="n9.md", kind="X", message="after resume")
     assert w.state.kill_state() is None
     assert w.state.conn.execute("SELECT COUNT(*) FROM errors").fetchone()[0] == 4
+
+
+def test_steady_state_outage_trips_on_failure_share(tmp_path: Path) -> None:
+    # D-34 (owner decision 2026-11-22): an API outage mid-day never reached 5 errors in 60 min (one arrival at a
+    # time, parked after 3 attempts, D-25), so the job ran on silently. Now >= 80% of at least 3 attempts failing
+    # within the window trips "failure_rate".
+    res = simulate(tmp_path / "s", ticks=96, inject=("error-burst", 10))
+    assert [t["reason"] for t in res.trips] == ["failure_rate"]
+    assert res.calls_after_trip == 0
+    assert res.consistency_problems == [] and res.bodies_changed == []
+
+
+def test_a_normal_recorded_day_does_not_trip_on_failure_share(tmp_path: Path) -> None:
+    res = simulate(tmp_path / "s", ticks=96)
+    assert res.trips == []

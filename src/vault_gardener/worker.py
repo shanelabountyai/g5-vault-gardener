@@ -105,6 +105,7 @@ class Worker:
                     cat = agents.catalog(self.state)
                     for r in self.state.rows("pending_link"):
                         agents.link(ctx, r["path"], cat)
+                self.supervisor.check_failure_rate(run_id, counts.model_calls, counts.errors)
             except Tripped as t:
                 status, reason, detail = "tripped", t.reason, t.detail
                 span.add_event("gardener.stopped", {"reason": t.reason})
