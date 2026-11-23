@@ -355,7 +355,10 @@ class State:
                       (run_id, tick, agent, path, kind, message[:500], self.now_iso(), self.epoch()))
 
     def errors_since(self, epoch: float) -> int:
-        return int(self.conn.execute("SELECT COUNT(*) FROM errors WHERE at_epoch >= ?", (epoch,)).fetchone()[0])
+        """Errors at or after `epoch`, but never from before the last `resume` (D-33): a resume starts a fresh window."""
+        r = self.conn.execute("SELECT value FROM supervisor WHERE key='errors_reset_after_id'").fetchone()
+        after_id = int(json.loads(r["value"])) if r else 0
+        return int(self.conn.execute("SELECT COUNT(*) FROM errors WHERE at_epoch >= ? AND error_id > ?", (epoch, after_id)).fetchone()[0])
 
     # -- kill switch (D-15) ----------------------------------------------------
 
@@ -374,7 +377,12 @@ class State:
 
     def clear_killed(self) -> bool:
         with self.tx() as c:
-            return c.execute("DELETE FROM supervisor WHERE key='killed'").rowcount == 1
+            cleared = c.execute("DELETE FROM supervisor WHERE key='killed'").rowcount == 1
+            if cleared:
+                # Errors logged before the resume stay in the table but stop counting toward a burst (D-33).
+                last = c.execute("SELECT COALESCE(MAX(error_id), 0) FROM errors").fetchone()[0]
+                c.execute("INSERT OR REPLACE INTO supervisor (key, value) VALUES ('errors_reset_after_id', ?)", (json.dumps(int(last)),))
+            return cleared
 
     # -- consistency (D-15) ----------------------------------------------------
 

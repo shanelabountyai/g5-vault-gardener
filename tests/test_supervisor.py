@@ -159,3 +159,18 @@ def test_kill_switch_set_during_a_call_stops_that_calls_write(make_worker, vault
     killed_path = caller.key.split(":", 1)[1]
     assert w.state.conn.execute("SELECT COUNT(*) FROM changes WHERE path=?", (killed_path,)).fetchone()[0] == 0
     assert w.state.check_consistency() == []
+
+
+def test_resume_starts_a_fresh_error_window(make_worker) -> None:  # type: ignore[no-untyped-def]
+    # D-33 (owner decision 2026-11-22): errors from before a resume no longer count toward the next burst, so the
+    # first error after a resume cannot re-trip on its own. The error rows are kept (audit).
+    from vault_gardener.supervisor import Tripped
+
+    w = make_worker(limits=Limits(daily_cap_usd=100.0, daily_token_budget=10**9, error_burst=3, error_window_s=3600))
+    with pytest.raises(Tripped):
+        for i in range(3):
+            w.supervisor.record_error(run_id="r", tick=0, agent="classifier", path=f"n{i}.md", kind="X", message="boom")
+    assert w.state.clear_killed()
+    w.supervisor.record_error(run_id="r", tick=0, agent="classifier", path="n9.md", kind="X", message="after resume")
+    assert w.state.kill_state() is None
+    assert w.state.conn.execute("SELECT COUNT(*) FROM errors").fetchone()[0] == 4
