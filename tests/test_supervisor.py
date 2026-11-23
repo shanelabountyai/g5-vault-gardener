@@ -135,3 +135,57 @@ def test_fault_injector_passes_through_before_its_tick() -> None:
     assert r.input_tokens < 1000 and f.injected == 0
     f.tick = 3
     assert f.call(CLASSIFIER, "x", "classifier:reference/vlan-notes.md").input_tokens > 1_000_000
+
+
+def test_kill_switch_set_during_a_call_stops_that_calls_write(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S8: the switch was checked only before each call, so a `gardener kill` that landed during a
+    # call still let that call's result be written.
+    class KillDuring(RecordedCaller):
+        def __init__(self, state, n: int) -> None:  # type: ignore[no-untyped-def]
+            super().__init__()
+            self.state, self.n, self.key = state, n, ""
+
+        def call(self, spec, user_text, key) -> CallResult:  # type: ignore[no-untyped-def]
+            if sum(self.calls.values()) == self.n - 1:
+                self.state.set_killed("manual", "owner pressed stop", None)
+                self.key = key
+            return super().call(spec, user_text, key)
+
+    w = make_worker()
+    caller = KillDuring(w.state, 5)
+    w.caller = caller
+    r = w.tick()
+    assert r.status == "tripped" and r.reason == "manual"
+    killed_path = caller.key.split(":", 1)[1]
+    assert w.state.conn.execute("SELECT COUNT(*) FROM changes WHERE path=?", (killed_path,)).fetchone()[0] == 0
+    assert w.state.check_consistency() == []
+
+
+def test_resume_starts_a_fresh_error_window(make_worker) -> None:  # type: ignore[no-untyped-def]
+    # D-33 (owner decision 2026-11-22): errors from before a resume no longer count toward the next burst, so the
+    # first error after a resume cannot re-trip on its own. The error rows are kept (audit).
+    from vault_gardener.supervisor import Tripped
+
+    w = make_worker(limits=Limits(daily_cap_usd=100.0, daily_token_budget=10**9, error_burst=3, error_window_s=3600))
+    with pytest.raises(Tripped):
+        for i in range(3):
+            w.supervisor.record_error(run_id="r", tick=0, agent="classifier", path=f"n{i}.md", kind="X", message="boom")
+    assert w.state.clear_killed()
+    w.supervisor.record_error(run_id="r", tick=0, agent="classifier", path="n9.md", kind="X", message="after resume")
+    assert w.state.kill_state() is None
+    assert w.state.conn.execute("SELECT COUNT(*) FROM errors").fetchone()[0] == 4
+
+
+def test_steady_state_outage_trips_on_failure_share(tmp_path: Path) -> None:
+    # D-34 (owner decision 2026-11-22): an API outage mid-day never reached 5 errors in 60 min (one arrival at a
+    # time, parked after 3 attempts, D-25), so the job ran on silently. Now >= 80% of at least 3 attempts failing
+    # within the window trips "failure_rate".
+    res = simulate(tmp_path / "s", ticks=96, inject=("error-burst", 10))
+    assert [t["reason"] for t in res.trips] == ["failure_rate"]
+    assert res.calls_after_trip == 0
+    assert res.consistency_problems == [] and res.bodies_changed == []
+
+
+def test_a_normal_recorded_day_does_not_trip_on_failure_share(tmp_path: Path) -> None:
+    res = simulate(tmp_path / "s", ticks=96)
+    assert res.trips == []

@@ -138,3 +138,93 @@ def test_no_network_client_in_the_package() -> None:
         t = f.read_text()
         for mod in ("import requests", "import httpx", "urllib.request", "import smtplib", "import socket"):
             assert mod not in t, (f.name, mod)
+
+
+def _status(w, path: str) -> str:  # type: ignore[no-untyped-def]
+    return str(w.state.row(path)["status"])
+
+
+def test_crlf_note_is_edited_in_its_own_line_endings(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 M1 found universal-newline reads silently turned \r\n into \n. D-35 (owner decision): CRLF
+    # notes are supported: frontmatter/Related edits are written with \r\n, the body bytes are untouched, and a
+    # revert restores the original file byte for byte.
+    p = vault / "projects/bread-oven-schedule.md"
+    raw = p.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    new = p.read_bytes()
+    assert new != raw and b"\n" not in new.replace(b"\r\n", b"")  # edited, and every line still ends in \r\n
+    before, after = note.parse(raw.decode()), note.parse(new.decode())
+    assert after.body == before.body and after.body_hash == before.body_hash
+    assert "pinned" in after.tags() and "topic/cooking" in after.tags()
+    assert _status(w, "projects/bread-oven-schedule.md") == "done"
+    assert w.state.check_consistency() == []
+    w.state.revert()
+    assert p.read_bytes() == raw
+
+
+def test_mixed_line_endings_are_left_byte_identical(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Kept from review M1: a file that mixes \r\n and \n (or has a bare \r) cannot be edited without choosing an
+    # ending for the new lines, so it stays "unsupported" and untouched.
+    p = vault / "projects/bread-oven-schedule.md"
+    lines = p.read_bytes().replace(b"\r\n", b"\n").split(b"\n")
+    raw = b"\r\n".join(lines[:3]) + b"\r\n" + b"\n".join(lines[3:])
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    assert p.read_bytes() == raw
+    assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
+
+
+def test_owner_tags_survive_frontmatter_that_is_not_valid_yaml(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 M2: unparseable YAML read as {} → tags [] → the Classifier replaced the owner's tag block.
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    raw = ("---\ntitle: Notes: part two\ntags:\n  - mine\n---\n" + body).encode()
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    assert p.read_bytes() == raw
+    assert _status(w, "projects/bread-oven-schedule.md") == "unsupported"
+
+
+def test_note_with_a_byte_order_mark_keeps_it_and_its_single_frontmatter(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S5 found "\ufeff---" got a second frontmatter block. D-35: the BOM is kept, the owner's
+    # frontmatter is edited in place, and a revert restores the file byte for byte.
+    p = vault / "projects/bread-oven-schedule.md"
+    raw = "\ufeff".encode() + p.read_bytes()
+    p.write_bytes(raw)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    new = p.read_bytes().decode()
+    assert new.startswith("\ufeff---\n") and new.count("\n---\n") == 1
+    after = note.parse(new)
+    assert after.tags()[0] == "pinned" and "topic/cooking" in after.tags() and "created: " in "\n".join(after.fm_lines or ())
+    assert after.body == note.parse(raw.decode()).body
+    w.state.revert()
+    assert p.read_bytes() == raw
+
+
+def test_owner_tags_that_need_quoting_do_not_trip_the_job(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S3: tags were re-rendered unquoted, so "#garden" became a YAML comment and 'null' became
+    # None; the safety check refused the write and the supervisor tripped the whole job on one ordinary tag.
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    p.write_text("---\ncreated: 2026-10-04\ntags:\n  - \"#garden\"\n  - 'null'\n  - \"yes\"\n---\n" + body)
+    w = make_worker()
+    r = w.tick()
+    assert r.status == "ok", r.reason
+    after = note.parse(p.read_text())
+    assert after.tags()[:3] == ["#garden", "null", "yes"] and len(after.tags()) > 3
+
+
+def test_frontmatter_comment_and_blank_lines_survive_a_classify(make_worker, vault: Path) -> None:  # type: ignore[no-untyped-def]
+    # Review 2026-11-22 S4: a "# ..." line after the tags list was grouped into the tags block and dropped (D-12).
+    p = vault / "projects/bread-oven-schedule.md"
+    body = note.parse(p.read_text()).body
+    p.write_text("---\ncreated: 2026-10-04\ntags:\n  - pinned\n# keep this comment\n\nsource: kitchen\n---\n" + body)
+    w = make_worker()
+    assert w.tick().status == "ok"
+    fm = p.read_text().split("---\n")[1]
+    assert "# keep this comment\n\nsource: kitchen\n" in fm and "topic/cooking" in fm

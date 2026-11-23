@@ -48,6 +48,8 @@ class Limits:
     daily_token_budget: int = DEFAULT_DAILY_TOKEN_BUDGET
     error_burst: int = 5
     error_window_s: int = 60 * 60
+    failure_share: float = 0.8  # D-34: trip when this share of attempts in the window failed ...
+    failure_min_attempts: int = 3  # ... and there were at least this many attempts
 
     @classmethod
     def from_env(cls, **overrides: float | int | None) -> Limits:
@@ -56,10 +58,13 @@ class Limits:
             "daily_token_budget": int(os.environ.get("G5_DAILY_TOKEN_BUDGET", DEFAULT_DAILY_TOKEN_BUDGET)),
             "error_burst": int(os.environ.get("G5_ERROR_BURST", 5)),
             "error_window_s": int(os.environ.get("G5_ERROR_WINDOW_S", 3600)),
+            "failure_share": float(os.environ.get("G5_FAILURE_SHARE", 0.8)),
+            "failure_min_attempts": int(os.environ.get("G5_FAILURE_MIN_ATTEMPTS", 3)),
         }
         vals.update({k: v for k, v in overrides.items() if v is not None})
         return cls(daily_cap_usd=float(vals["daily_cap_usd"]), daily_token_budget=int(vals["daily_token_budget"]),
-                   error_burst=int(vals["error_burst"]), error_window_s=int(vals["error_window_s"]))
+                   error_burst=int(vals["error_burst"]), error_window_s=int(vals["error_window_s"]),
+                   failure_share=float(vals["failure_share"]), failure_min_attempts=int(vals["failure_min_attempts"]))
 
 
 def g0_db_path(state_dir: Path) -> str:

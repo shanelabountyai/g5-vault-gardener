@@ -25,7 +25,7 @@ from typing import Any, Literal
 from vault_gardener import note, safety
 from vault_gardener.clock import Clock, iso
 
-STATUSES = ("pending_classify", "pending_link", "done", "error", "missing", "reverted")
+STATUSES = ("pending_classify", "pending_link", "done", "error", "missing", "reverted", "unsupported")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS notes (
@@ -105,18 +105,29 @@ class LockLost(RuntimeError):
 
 def read_text(path: Path) -> str | None:
     try:
-        return path.read_text(encoding="utf-8")
+        # Bytes in, no newline translation: a CRLF note must hash (and be compared) as it is on disk (review M1).
+        return path.read_bytes().decode("utf-8")
     except FileNotFoundError:
         return None
 
 
-def atomic_write(path: Path, text: str) -> None:
+def atomic_write(path: Path, text: str, expect_hash: str | None = None) -> bool:
+    """Write via a temp file and rename. With `expect_hash`, re-check the file right before the rename and give up
+    (temp file removed, False) if it changed: an owner save during the write wins (review 2026-11-22 S7). This
+    narrows the window to the instant between that read and `os.replace`; a plain filesystem offers no atomic
+    compare-and-rename."""
     tmp = path.with_name(f".{path.name}.gardener-tmp-{uuid.uuid4().hex[:8]}")
     with open(tmp, "w", encoding="utf-8", newline="") as f:
         f.write(text)
         f.flush()
         os.fsync(f.fileno())
+    if expect_hash is not None:
+        current = read_text(path)
+        if current is None or note.sha256(current) != expect_hash:
+            tmp.unlink(missing_ok=True)
+            return False
     os.replace(tmp, path)
+    return True
 
 
 class State:
@@ -257,7 +268,10 @@ class State:
                 (run_id, tick, agent, path, based_on, new_text, b_hash, a_hash, "pending", self.now_iso()),
             )
             change_id = cur.lastrowid
-        atomic_write(file, new_text)
+        if not atomic_write(file, new_text, expect_hash=b_hash):
+            with self.tx() as c:
+                c.execute("UPDATE changes SET status='aborted' WHERE change_id=?", (change_id,))
+            return "conflict"
         updates = {"content_hash": a_hash, "body_hash": note.body_hash(new_text), **row_updates}
         cols = ", ".join(f"{k}=?" for k in updates)
         with self.tx() as c:
@@ -267,7 +281,7 @@ class State:
 
     def reconcile(self) -> dict[str, int]:
         """Settle `pending` changes left by a crash between log and write (D-14)."""
-        out = {"applied": 0, "aborted": 0, "inconsistent": 0}
+        out = {"applied": 0, "aborted": 0, "superseded": 0}
         for ch in list(self.conn.execute("SELECT * FROM changes WHERE status='pending' ORDER BY change_id")):
             current = read_text(self.vault / ch["path"])
             h = note.sha256(current) if current is not None else None
@@ -281,7 +295,11 @@ class State:
                     c.execute("UPDATE changes SET status='aborted' WHERE change_id=?", (ch["change_id"],))
                 out["aborted"] += 1
             else:
-                out["inconsistent"] += 1
+                # The file matches neither side: someone (the owner) changed it after the crash. The file is the
+                # truth; the half-written change is closed so the Watcher picks the note up again (review S9).
+                with self.tx() as c:
+                    c.execute("UPDATE changes SET status='superseded' WHERE change_id=?", (ch["change_id"],))
+                out["superseded"] += 1
         return out
 
     # -- revert (D-17) ---------------------------------------------------------
@@ -336,8 +354,20 @@ class State:
             c.execute("INSERT INTO errors (run_id, tick, agent, path, kind, message, at, at_epoch) VALUES (?,?,?,?,?,?,?,?)",
                       (run_id, tick, agent, path, kind, message[:500], self.now_iso(), self.epoch()))
 
+    def calls_and_errors_since(self, start_iso: str, exclude_run: str) -> tuple[int, int]:
+        """(model calls, errors) summed over finished ticks that started at or after `start_iso` and after the
+        last resume (D-34). The running tick is excluded; the caller adds its live counts."""
+        r = self.conn.execute("SELECT value FROM supervisor WHERE key='resumed_at'").fetchone()
+        floor = max(start_iso, json.loads(r["value"])) if r else start_iso
+        row = self.conn.execute("SELECT COALESCE(SUM(model_calls),0), COALESCE(SUM(errors),0) FROM runs WHERE started_at >= ? AND run_id != ?",
+                                (floor, exclude_run)).fetchone()
+        return int(row[0]), int(row[1])
+
     def errors_since(self, epoch: float) -> int:
-        return int(self.conn.execute("SELECT COUNT(*) FROM errors WHERE at_epoch >= ?", (epoch,)).fetchone()[0])
+        """Errors at or after `epoch`, but never from before the last `resume` (D-33): a resume starts a fresh window."""
+        r = self.conn.execute("SELECT value FROM supervisor WHERE key='errors_reset_after_id'").fetchone()
+        after_id = int(json.loads(r["value"])) if r else 0
+        return int(self.conn.execute("SELECT COUNT(*) FROM errors WHERE at_epoch >= ? AND error_id > ?", (epoch, after_id)).fetchone()[0])
 
     # -- kill switch (D-15) ----------------------------------------------------
 
@@ -356,7 +386,13 @@ class State:
 
     def clear_killed(self) -> bool:
         with self.tx() as c:
-            return c.execute("DELETE FROM supervisor WHERE key='killed'").rowcount == 1
+            cleared = c.execute("DELETE FROM supervisor WHERE key='killed'").rowcount == 1
+            if cleared:
+                # Errors logged before the resume stay in the table but stop counting toward a burst (D-33).
+                last = c.execute("SELECT COALESCE(MAX(error_id), 0) FROM errors").fetchone()[0]
+                c.execute("INSERT OR REPLACE INTO supervisor (key, value) VALUES ('errors_reset_after_id', ?)", (json.dumps(int(last)),))
+                c.execute("INSERT OR REPLACE INTO supervisor (key, value) VALUES ('resumed_at', ?)", (json.dumps(self.now_iso()),))
+            return cleared
 
     # -- consistency (D-15) ----------------------------------------------------
 

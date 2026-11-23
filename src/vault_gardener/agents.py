@@ -23,7 +23,7 @@ from vault_gardener import note
 from vault_gardener.config import LEASE_SECONDS, MAX_ATTEMPTS, MAX_LINKS
 from vault_gardener.llm import CLASSIFIER, LINKER, AgentSpec, CallResult, ModelCaller, ModelCallError
 from vault_gardener.safety import SafetyViolation
-from vault_gardener.state import State, read_text
+from vault_gardener.state import LockLost, State, read_text
 from vault_gardener.supervisor import Supervisor
 
 
@@ -57,12 +57,13 @@ class TickCounts:
     output_tokens: int = 0
     cost_usd: float = 0.0
     skipped_locked: int = 0
+    skipped_unsupported: int = 0  # left byte-identical: the agents cannot edit this note safely (not an error)
     tags_rejected: list[str] = field(default_factory=list)
     links_rejected: list[str] = field(default_factory=list)
 
     def for_db(self) -> dict[str, Any]:
         return {k: (round(v, 6) if isinstance(v, float) else v) for k, v in self.__dict__.items()
-                if k not in ("skipped_locked", "tags_rejected", "links_rejected")}
+                if k not in ("skipped_locked", "skipped_unsupported", "tags_rejected", "links_rejected")}
 
 
 @dataclass
@@ -144,10 +145,27 @@ def _fail(ctx: Context, agent: str, path: str, kind: str, message: str, model: s
     return "error"
 
 
+def _unsupported(ctx: Context, path: str) -> str:
+    """Leave the note exactly as it is; not an error. The Watcher re-queues it when its content changes."""
+    ctx.state.set_fields(path, status="unsupported", attempts=0)
+    ctx.counts.skipped_unsupported += 1
+    return "unsupported"
+
+
 def _write(ctx: Context, agent: str, path: str, based_on: str, new_text: str, **row_updates: Any) -> str:
+    # A model call can outlast the lease (slow call, sleeping laptop): renew it, or count a conflict if another
+    # agent took it meanwhile. CAS in write_note still guards the file (review 2026-11-22 S6).
+    if ctx.state.kill_state() is not None:
+        ctx.supervisor.check(ctx.run_id)  # raises Tripped: a kill that landed during the model call stops this write (S8)
+    if not ctx.state.try_lock(path, ctx.owner, ctx.lease_s):
+        ctx.counts.conflicts += 1
+        return "conflict"
     try:
         res = ctx.state.write_note(path=path, owner=ctx.owner, run_id=ctx.run_id, tick=ctx.tick, agent=agent, based_on=based_on,
                                    new_text=new_text, **row_updates)
+    except LockLost:
+        ctx.counts.conflicts += 1
+        return "conflict"
     except SafetyViolation as e:
         ctx.counts.errors += 1
         ctx.state.add_error(ctx.run_id, ctx.tick, agent, path, "safety", str(e))
@@ -195,6 +213,8 @@ def classify(ctx: Context, path: str) -> str:
             return "skip"
         if note.sha256(text) != row["content_hash"]:
             return "stale"  # changed since the Watcher saw it; next tick
+        if note.unsupported(text) is not None:
+            return _unsupported(ctx, path)
         try:
             result = _call(ctx, CLASSIFIER, path, classifier_message(ctx.taxonomy, path, text))
             tags, ntype, folder = parse_classifier(result.raw, ctx.taxonomy)
@@ -262,6 +282,8 @@ def link(ctx: Context, path: str, cat: dict[str, dict[str, Any]]) -> str:
             return "skip"
         if note.sha256(text) != row["content_hash"]:
             return "stale"
+        if note.unsupported(text) is not None:
+            return _unsupported(ctx, path)
         try:
             result = _call(ctx, LINKER, path, linker_message(path, text, cat))
             related = parse_linker(result.raw)

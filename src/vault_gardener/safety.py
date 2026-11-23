@@ -29,6 +29,11 @@ class NotACopyVault(RuntimeError):
 def check_change(before: str, after: str) -> list[str]:
     """Return the list of invariant violations going from `before` to `after` (empty = safe)."""
     problems: list[str] = []
+    reason = note.unsupported(before)
+    if reason is not None and after != before:
+        problems.append(f"unsupported note ({reason}) must not be edited")
+    if note.file_form(before) != note.file_form(after):
+        problems.append("line endings or byte-order mark changed")
     b, a = note.parse(before), note.parse(after)
     if b.body_hash != a.body_hash:
         problems.append("body changed")
