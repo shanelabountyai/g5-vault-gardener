@@ -37,13 +37,15 @@ class Note:
     """A parsed note. `fm_lines` is None when the note has no frontmatter."""
 
     fm_lines: tuple[str, ...] | None
-    body: str  # the owner's body: managed block removed
+    body: str  # the owner's body: managed block removed (in \n form; see `form`)
     related: tuple[str, ...]  # targets in the managed block, in order ([] if none)
     has_block: bool
+    form: tuple[bool, bool] = (False, False)  # (starts with a BOM, CRLF line endings) of the file on disk (D-35)
 
     @property
     def body_hash(self) -> str:
-        return sha256(self.body)
+        """Hash of the body as it is on disk (BOM and \r\n restored), so a line-ending change is a body change."""
+        return sha256(_restore(self.body, self.form))
 
     def frontmatter(self) -> dict[str, Any]:
         return self._fm
@@ -104,13 +106,37 @@ class Note:
         return ""
 
 
+Form = tuple[bool, bool]  # (BOM, CRLF)
+
+
+def file_form(text: str) -> Form | None:
+    """(starts with a UTF-8 BOM, uses \r\n) — or None for mixed or bare-\r line endings, which cannot be edited
+    without choosing an ending for the new lines (D-35)."""
+    bom = text.startswith("\ufeff")
+    t = text[1:] if bom else text
+    if "\r" not in t:
+        return (bom, False)
+    rest = t.replace("\r\n", "")
+    if "\r" in rest or "\n" in rest:
+        return None
+    return (bom, True)
+
+
+def _normalize(text: str, form: Form) -> str:
+    t = text[1:] if form[0] else text
+    return t.replace("\r\n", "\n") if form[1] else t
+
+
+def _restore(text: str, form: Form) -> str:
+    t = text.replace("\n", "\r\n") if form[1] else text
+    return "\ufeff" + t if form[0] else t
+
+
 def unsupported(text: str) -> str | None:
-    """Why the agents must leave this note alone (None = they may edit it). Edits are line-based on `\n`; a note
-    they cannot edit without rewriting bytes outside tags/type/Related is skipped, never "fixed" (review 2026-11-22)."""
-    if text.startswith("\ufeff"):
-        return "starts with a byte-order mark"
-    if "\r" in text:
-        return "CR/CRLF line endings"
+    """Why the agents must leave this note alone (None = they may edit it). BOM and uniform CRLF notes are edited in
+    their own form (D-35); mixed endings and unreadable frontmatter are skipped, never "fixed" (review 2026-11-22)."""
+    if file_form(text) is None:
+        return "mixed or bare-CR line endings"
     return parse(text).frontmatter_problem()
 
 
@@ -142,9 +168,18 @@ def strip_block(rest: str) -> tuple[str, tuple[str, ...], bool]:
 
 
 def parse(text: str) -> Note:
-    fm, rest = split_frontmatter(text)
+    form = file_form(text)
+    t = _normalize(text, form) if form is not None else text  # mixed endings: parsed raw (and never edited)
+    fm, rest = split_frontmatter(t)
     body, related, has_block = strip_block(rest)
-    return Note(fm_lines=fm, body=body, related=related, has_block=has_block)
+    return Note(fm_lines=fm, body=body, related=related, has_block=has_block, form=form or (False, False))
+
+
+def _editable(text: str) -> tuple[str, Form]:
+    form = file_form(text)
+    if form is None:
+        raise ValueError("mixed or bare-CR line endings: not editable (D-35)")
+    return _normalize(text, form), form
 
 
 def body_hash(text: str) -> str:
@@ -187,7 +222,9 @@ def render_tags(tags: list[str]) -> tuple[str, ...]:
 
 
 def set_frontmatter(text: str, *, tags: list[str] | None = None, type_: str | None = None) -> str:
-    """Return `text` with the `tags` and/or `type` key blocks replaced (or added). Nothing else changes."""
+    """Return `text` with the `tags` and/or `type` key blocks replaced (or added). Nothing else changes; the file's
+    BOM and line endings are kept (D-35)."""
+    text, form = _editable(text)
     fm, rest = split_frontmatter(text)
     blocks = key_blocks(fm) if fm is not None else []
     out: list[tuple[str | None, tuple[str, ...]]] = []
@@ -206,7 +243,7 @@ def set_frontmatter(text: str, *, tags: list[str] | None = None, type_: str | No
     if type_ is not None and "type" not in done:
         out.append(("type", (f"type: {type_}",)))
     new_lines = [line for _, lines in out for line in lines]
-    return "---\n" + "\n".join(new_lines) + "\n---\n" + rest
+    return _restore("---\n" + "\n".join(new_lines) + "\n---\n" + rest, form)
 
 
 # -- managed Related block ----------------------------------------------------
@@ -218,10 +255,11 @@ def render_block(targets: list[str]) -> str:
 
 
 def set_related(text: str, targets: list[str]) -> str:
-    """Replace (or append) the managed block. With no targets, the block is removed."""
+    """Replace (or append) the managed block. With no targets, the block is removed. BOM and endings kept (D-35)."""
+    text, form = _editable(text)
     fm, rest = split_frontmatter(text)
     body, _, _ = strip_block(rest)
     head = "" if fm is None else "---\n" + "\n".join(fm) + "\n---\n"
     if not targets:
-        return head + body
-    return head + body + BLOCK_SEP + render_block(targets)
+        return _restore(head + body, form)
+    return _restore(head + body + BLOCK_SEP + render_block(targets), form)

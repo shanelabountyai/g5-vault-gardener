@@ -113,3 +113,14 @@ def test_worker_refuses_fixture_vault_and_unmarked_vaults(tmp_path: Path) -> Non
     assert safety.ensure_copy_vault(tmp_path) == tmp_path.resolve()
     with pytest.raises(safety.NotACopyVault):
         safety.ensure_copy_vault(tmp_path / "missing")
+
+
+def test_line_ending_or_bom_change_is_refused() -> None:
+    # D-35: CRLF/BOM notes are editable, so the safety check must catch a write that converts the file's form even
+    # when the body is otherwise the same text.
+    lf = "---\ntags:\n  - pinned\n---\n# Title\n\nBody line.\n"
+    crlf = lf.replace("\n", "\r\n")
+    assert safety.check_change(crlf, note.set_frontmatter(crlf, tags=["pinned", "topic/cooking"])) == []
+    assert any("line endings" in p for p in safety.check_change(crlf, lf))
+    assert any("line endings" in p for p in safety.check_change("﻿" + lf, lf))
+    assert note.body_hash(crlf) != note.body_hash(lf)
