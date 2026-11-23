@@ -1,5 +1,17 @@
 # NEXT
 
+## 2026-11-23 — owner decisions built (branch `review-fixes/2026-11-22`, PR #2 still draft, unmerged)
+
+Shane approved the review's recommendations. Built, each with tests first:
+- `0ebf8d6` **D-33** `gardener resume` starts a fresh error-burst window (old errors kept, no longer counted).
+- `428e0d1` **D-34** failure-share trip: ≥ 80% of at least 3 attempts failed in 60 min → `failure_rate`. A forced outage from tick 10 now trips (it never did, D-25); the normal recorded day still has 0 trips.
+- `8afcacf` **D-35** uniform CRLF and BOM notes are edited in their own form (BOM and `\r\n` kept, body hashed as on disk, revert byte-exact; safety refuses a line-ending/BOM change). Mixed endings and unreadable frontmatter stay `unsupported`. The two review tests for skip-only behaviour were replaced by stronger ones; a mixed-endings test keeps the skip guarantee.
+- `d6d342d` decisions D-33..D-36.
+
+**Gate (local, head `d6d342d`, `G0_DB_PATH` unset):** ruff All checks passed! · mypy no issues in 17 files · pytest 92 passed · simulate and quality reports identical to the committed ones · **CI:** push and pull_request runs on `d6d342d`: success.
+
+**Still open (D-36):** copy-vault guard is a marker file (needs your real vault root path to also refuse it); filename-stem collisions; provisional D-1, D-4, D-5, D-6, D-10. Merge stays yours.
+
 ## 2026-11-22 — overnight review of merged PR #1 (branch `review-fixes/2026-11-22`, draft PR "G5·C: review fixes (2026-11-22)")
 
 **Review** (fresh review agent on the merged PR #1 diff + PRD/backlog/decisions): **2 must-fix, 7 should-fix, 1 nit**, plus owner calls. Every README and report number reproduced (145 calls, 68 / 79 / 203 / 3 errors, 144,796 est. tokens, $0.0156; 0.9375 / 0.9091 / 0.95 / 0.9661, 17/20; spike trips at tick 18). Fixtures look synthetic (generated filler, "(fictional title)", no emails/URLs/phones/real names). G0 pinned by SHA, not copied; no secrets; no skipped tests; live calls need `--live` and a key.
