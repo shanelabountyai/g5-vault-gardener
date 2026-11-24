@@ -1,5 +1,29 @@
 # NEXT
 
+## 2026-11-24 — pre-live portfolio pack, docs only (branch `portfolio-pack/2026-11-24`, draft PR, unmerged)
+
+**Not deployed.** Nothing here is live, hosted or launched. Docs only: no code, test, fixture, config, CI or generated report changed.
+
+**Done:**
+- `docs/DEMO.md` — "At a glance" block + 13-stop local walk-through, each stop with its evidence.
+- Exec brief "G5·C Vault Gardener in Brief" (Claude Docs, private): https://claude.ai/artifact/XsLgc72QmmhhhXnv3kd5RL — kept, updated in place (as-of date, gate line, wrong "D-41" cost reference → D-37); not shared (D-40).
+- `docs/LINKEDIN_DRAFTS.md` — two drafts (D-25/D-34, D-24), drafted, unposted (D-42).
+- `docs/DECISIONS.md` — D-37 cost note (build and running cost not measured; $0 model spend; caps listed as limits), D-38..D-43 judgment calls.
+- `docs/RELEASE_NOTES.md` — "Not deployed — portfolio pack 2026-11-24".
+
+**Verified, and how:** on the branch before any doc commit (tree = `main` `6e1f87c`, `G0_DB_PATH` unset), the `ci.yml` steps: `uv sync --frozen` exit 0 · `uv run ruff check .` exit 0 · `uv run mypy` exit 0 (17 files) · `uv run pytest` exit 0, 92 passed · 96-tick simulation exit 0, report byte-identical to `docs/daily-report-simulated.md` · quality exit 0, byte-identical to `docs/quality-report.md`. Also `uv run gardener demo` exit 0 ("Demo passed."), and a CLI walk-through (`copy-fixture`, refused run on the fixture, `run --ticks 2 --sim-clock`, `status`, `report`, `kill`, refused run while killed, `revert --all`, `resume`) with the exit codes recorded in `docs/DEMO.md`. Every commit SHA in the release notes checked against `main` with git. CI on the PR: see the PR's "Gate results".
+
+**Not verified:** a real 24-hour wall-clock run; any live model call (real tokens, cost, quality); `AgentSdkCaller`; dropping a note into a running loop by hand; any real vault; any deployment. DEMO.md: 11 of 13 stops fully verified; stops 9 (wall-clock loop) and 10 (note dropped by hand) not yet clicked through by you.
+
+**Found, not fixed (needs a code or out-of-scope change, D-43):** `gardener run` on the fixture vault prints a raw `NotACopyVault` traceback instead of a one-line refusal; README still says "D-1..D-26".
+
+**You:**
+1. Review the draft PR (docs only). It is held: do not merge until you have read it.
+2. Click through `docs/DEMO.md`, especially stops 9 and 10.
+3. Read the brief (link above); it stays private unless you share it.
+4. Edit the two LinkedIn drafts into your own words before posting either.
+5. Decide whether to deploy at all. Before that: the open items in D-36 and the provisional D-1, D-4, D-5, D-6, D-10.
+
 ## 2026-11-23 — owner decisions built (branch `review-fixes/2026-11-22`, PR #2 still draft, unmerged)
 
 Shane approved the review's recommendations. Built, each with tests first:
